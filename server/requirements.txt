@@ -1,0 +1,40 @@
+PS C:\Users\Lenovo\SmartQueue> cd server
+PS C:\Users\Lenovo\SmartQueue\server> npm init -y 
+PS C:\Users\Lenovo\SmartQueue\server> npm i typescript ts-node @types/node --save-dev
+PS C:\Users\Lenovo\SmartQueue\server> npx tsc --init
+PS C:\Users\Lenovo\SmartQueue\server> npx ts-node src/index.ts
+Hello, SmartQueue!
+PS C:\Users\Lenovo\SmartQueue\server> npx tsc
+PS C:\Users\Lenovo\SmartQueue\server> node dist/index.js
+Hello, SmartQueue!
+PS C:\Users\Lenovo\SmartQueue\server> npm run dev
+> server@1.0.0 dev
+> ts-node src/index.ts
+Hello, SmartQueue!
+
+PS C:\Users\Lenovo\SmartQueue\server> npm run dev
+> server@1.0.0 dev
+> nodemon --exec ts-node src/index.ts
+[nodemon] 3.1.11
+[nodemon] to restart at any time, enter `rs`
+[nodemon] watching path(s): *.*
+[nodemon] watching extensions: ts,json
+[nodemon] starting `ts-node src/index.ts`
+Hello, SmartQueue!
+[nodemon] clean exit - waiting for changes before restart
+
+PS C:\Users\Lenovo\SmartQueue\server> npm install --save-dev ts-node-dev
+PS C:\Users\Lenovo\SmartQueue\server> npm run dev                      
+> server@1.0.0 dev
+> ts-node-dev src/index.ts
+[INFO] 15:36:30 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 6.0.3)
+Hello, SmartQueue!
+
+PS C:\Users\Lenovo\SmartQueue\server> npm run dev
+> server@1.0.0 dev
+> ts-node-dev --respawn --transpile-only src/index.ts
+[INFO] 15:36:58 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 6.0.3)
+Hello, SmartQueue!
+
+PS C:\Users\Lenovo\SmartQueue\server> npm i express
+PS C:\Users\Lenovo\SmartQueue\server> npm i --save-dev @types/express
