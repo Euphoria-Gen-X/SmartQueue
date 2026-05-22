@@ -1,7 +1,47 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const Signup = () => {
   const navigate = useNavigate();
+  
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const handleSignup = () => {
+
+  // Empty fields
+  if (
+    !name ||
+    !email ||
+    !password ||
+    !confirmPassword
+  ) {
+    setError("Please fill all fields");
+    return;
+  }
+  // Email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(email)) {
+    setError("Please enter a valid email");
+    return;
+  }
+  // Password length
+  if (password.length < 6) {
+    setError("Password must be at least 6 characters");
+    return;
+  }
+  // Password match
+  if (password !== confirmPassword) {
+    setError("Passwords do not match");
+    return;
+  }
+  // Success
+  setError("");
+  navigate("/dashboard");
+};
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-700 via-violet-800 to-purple-900 flex items-center justify-center p-6">
 
@@ -31,12 +71,13 @@ const Signup = () => {
               Full Name
             </label>
 
-            <input
-              type="text"
-              placeholder="Enter your full name"
-              className="w-full border border-gray-300 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500"
-            />
-
+           <input
+    type="text"
+    placeholder="Enter your full name"
+    value={name}
+    onChange={(e) => setName(e.target.value)}
+    className="w-full border border-gray-300 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500"
+/>
           </div>
 
           {/* Email */}
@@ -47,10 +88,12 @@ const Signup = () => {
             </label>
 
             <input
-              type="email"
-              placeholder="Enter your email"
-              className="w-full border border-gray-300 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500"
-            />
+  type="email"
+  placeholder="Enter your email"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+  className="w-full border border-gray-300 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500"
+/>
 
           </div>
 
@@ -61,11 +104,13 @@ const Signup = () => {
               Password
             </label>
 
-            <input
-              type="password"
-              placeholder="Create password"
-              className="w-full border border-gray-300 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500"
-            />
+           <input
+  type="password"
+  placeholder="Create password"
+  value={password}
+  onChange={(e) => setPassword(e.target.value)}
+  className="w-full border border-gray-300 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500"
+/>
 
           </div>
 
@@ -76,22 +121,28 @@ const Signup = () => {
               Confirm Password
             </label>
 
-            <input
-              type="password"
-              placeholder="Confirm password"
-              className="w-full border border-gray-300 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500"
-            />
+           <input
+  type="password"
+  placeholder="Confirm password"
+  value={confirmPassword}
+  onChange={(e) => setConfirmPassword(e.target.value)}
+  className="w-full border border-gray-300 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500"
+/>
 
           </div>
-
+{error && (
+  <p className="text-red-500 text-sm font-medium">
+    {error}
+  </p>
+)}
           {/* Signup Button */}
-         <button
-            type="button"
-            onClick={() => navigate("/dashboard")}
-            className="w-full bg-gradient-to-r from-purple-700 to-violet-900 text-white py-3 rounded-2xl font-semibold hover:opacity-90 transition-all duration-300"
-          >
-            Create Account
-          </button>
+    <button
+  type="button"
+  onClick={handleSignup}
+  className="w-full bg-gradient-to-r from-purple-700 to-violet-900 text-white py-3 rounded-2xl font-semibold hover:opacity-90 transition-all duration-300 mt-3"
+>
+  Create Account
+</button>
 
         </form>
 

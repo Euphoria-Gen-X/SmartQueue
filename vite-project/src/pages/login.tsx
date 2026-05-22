@@ -1,8 +1,45 @@
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const Login = () => {
-    const navigate = useNavigate();
+
+  const navigate = useNavigate();
+
+  // States
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  // Login Function
+  const handleLogin = () => {
+
+    // Empty validation
+    if (!email || !password) {
+      setError("Please fill all fields");
+      return;
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    // Password validation
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    // Success
+    setError("");
+    navigate("/dashboard");
+  };
+
   return (
+
     <div className="min-h-screen bg-gradient-to-br from-purple-700 via-violet-800 to-purple-900 flex items-center justify-center p-6">
 
       {/* Login Card */}
@@ -22,7 +59,7 @@ const Login = () => {
         </div>
 
         {/* Form */}
-        <form className="space-y-6">
+        <div className="space-y-6">
 
           {/* Email */}
           <div>
@@ -34,6 +71,8 @@ const Login = () => {
             <input
               type="email"
               placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full border border-gray-300 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500"
             />
 
@@ -49,6 +88,8 @@ const Login = () => {
             <input
               type="password"
               placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full border border-gray-300 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-violet-500"
             />
 
@@ -66,16 +107,23 @@ const Login = () => {
 
           </div>
 
-          {/* Login Button */}
-          <button
-            type="button"
-            onClick={() => navigate("/dashboard")}
-            className="w-full bg-gradient-to-r from-purple-700 to-violet-900 text-white py-3 rounded-2xl font-semibold hover:opacity-90 transition-all duration-300"
-          >
-            Login
-          </button>
+          {/* Error Message */}
+          {error && (
+            <p className="text-red-500 text-sm font-medium">
+              {error}
+            </p>
+          )}
 
-        </form>
+          {/* Login Button */}
+         <button
+            type="button"
+            onClick={handleLogin}
+            className="w-full bg-gradient-to-r from-purple-700 to-violet-900 text-white py-3 rounded-2xl font-semibold hover:opacity-90 transition-all duration-300"
+            >
+  Login
+</button>
+
+        </div>
 
         {/* Divider */}
         <div className="flex items-center my-8">
@@ -100,7 +148,7 @@ const Login = () => {
         {/* Signup Redirect */}
         <p className="text-center text-gray-500 mt-8">
 
-          Don&apos;t have an account?{" "}
+          Don't have an account?{" "}
 
           <Link
             to="/signup"
