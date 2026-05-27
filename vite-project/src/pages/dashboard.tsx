@@ -1,4 +1,25 @@
 const Dashboard = () => {
+  const testbackend = async () => {
+
+  try {
+
+    const response = await fetch(
+      "http://localhost:5000/api/test"
+    );
+
+    const data = await response.json();
+
+    console.log(data);
+
+    alert(data.message);
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert("Backend connection failed");
+  }
+};
   return (
     <div className="min-h-screen bg-slate-100 p-8">
       
@@ -7,6 +28,12 @@ const Dashboard = () => {
         <h1 className="text-3xl font-bold text-gray-800">
           Dashboard
         </h1>
+        <button
+    onClick={testbackend}
+    className="bg-violet-700 text-white px-5 py-2 rounded-xl"
+  >
+      Test Backend
+    </button>
         <p className="text-gray-500">
           Welcome back to SmartQueue
         </p>

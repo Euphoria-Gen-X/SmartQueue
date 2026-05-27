@@ -13,10 +13,12 @@ import Signup from "./pages/signup";
 
 function App() {
   return (
-    <Routes>
+    
+      <Routes>
 
       {/* Public Route */}
-      <Route path="/landing" element={<Landing />} />
+      <Route path="/" element={<Landing />} />
+      
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       {/* Private Routes */}
@@ -66,6 +68,8 @@ function App() {
       />
 
     </Routes>
+  
+  
   );
 }
 
