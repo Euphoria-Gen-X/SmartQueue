@@ -1,0 +1,264 @@
+{
+  "info": {
+    "name": "SmartQueue Workflow API",
+    "description": "Run requests from top to bottom after starting MongoDB and the backend on http://localhost:5000. The collection books a same-day appointment so QR check-in can move the token into the active queue.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "customerToken", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "serviceId", "value": "" },
+    { "key": "appointmentId", "value": "" },
+    { "key": "qrPayload", "value": "" },
+    { "key": "bookingDate", "value": "" },
+    { "key": "customerEmail", "value": "" },
+    { "key": "slotTime", "value": "" },
+    { "key": "queueId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Admin - Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@smartqueue.local\",\n  \"password\": \"admin123\"\n}"
+        },
+        "url": "{{baseUrl}}/admin/auth/login"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "type": "text/javascript", "exec": [
+          "const body = pm.response.json();",
+          "pm.test('Admin login succeeded', () => pm.expect(body.success).to.eql(true));",
+          "pm.collectionVariables.set('adminToken', body.data.token);",
+          "const today = new Date().toISOString().slice(0, 10);",
+          "pm.collectionVariables.set('bookingDate', today);",
+          "pm.collectionVariables.set('customerEmail', `postman.${Date.now()}@smartqueue.local`);"
+        ] }
+      }]
+    },
+    {
+      "name": "Customer - Register",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Postman Customer\",\n  \"email\": \"{{customerEmail}}\",\n  \"phone\": \"9876543210\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": "{{baseUrl}}/customer/auth/register"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "type": "text/javascript", "exec": [
+          "const body = pm.response.json();",
+          "pm.test('Customer registered', () => pm.expect(body.success).to.eql(true));"
+        ] }
+      }]
+    },
+    {
+      "name": "Customer - Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": "{{baseUrl}}/customer/auth/login"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "type": "text/javascript", "exec": [
+          "const body = pm.response.json();",
+          "pm.test('Customer login succeeded', () => pm.expect(body.success).to.eql(true));",
+          "pm.collectionVariables.set('customerToken', body.data.token);"
+        ] }
+      }]
+    },
+    {
+      "name": "Customer - Consultation Types",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+        "url": "{{baseUrl}}/customer/services"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "type": "text/javascript", "exec": [
+          "const body = pm.response.json();",
+          "pm.test('Consultation types are available', () => pm.expect(body.data.length).to.be.greaterThan(0));",
+          "pm.collectionVariables.set('serviceId', body.data[0]._id);"
+        ] }
+      }]
+    },
+    {
+      "name": "Customer - Slot Availability",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+        "url": "{{baseUrl}}/customer/appointments/availability?serviceId={{serviceId}}&date={{bookingDate}}"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "type": "text/javascript", "exec": [
+          "const slots = pm.response.json().data;",
+          "const available = slots.find((slot) => slot.available);",
+          "pm.test('Same-day slot is available', () => pm.expect(available, 'an available slot').to.exist);",
+          "pm.collectionVariables.set('slotTime', available.slotTime);"
+        ] }
+      }]
+    },
+    {
+      "name": "Customer - Create Appointment",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{customerToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"slotTime\": \"{{slotTime}}\",\n  \"preferredTime\": \"Morning\"\n}"
+        },
+        "url": "{{baseUrl}}/customer/appointments"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "type": "text/javascript", "exec": [
+          "const body = pm.response.json();",
+          "pm.test('Appointment created', () => pm.expect(body.success).to.eql(true));",
+          "const data = body.data;",
+          "pm.collectionVariables.set('appointmentId', data._id);",
+          "pm.collectionVariables.set('qrPayload', JSON.stringify({ appointmentId: data._id, appointmentCode: data.appointmentCode, tokenNumber: data.tokenNumber, customerId: data.userId }));"
+        ] }
+      }]
+    },
+    {
+      "name": "Customer - Queue Status Before Check-In",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+        "url": "{{baseUrl}}/customer/queue/status/{{appointmentId}}"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "type": "text/javascript", "exec": [
+          "const body = pm.response.json();",
+          "pm.test('Token is booked before check-in', () => pm.expect(body.data.status).to.eql('booked'));"
+        ] }
+      }]
+    },
+    {
+      "name": "Admin - Validate QR",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"payload\": {{qrPayload}}\n}" },
+        "url": "{{baseUrl}}/admin/qr/validate"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "type": "text/javascript", "exec": [
+          "const body = pm.response.json();",
+          "pm.test('QR is valid', () => pm.expect(body.success).to.eql(true));"
+        ] }
+      }]
+    },
+    {
+      "name": "Admin - QR Check-In",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"payload\": {{qrPayload}}\n}" },
+        "url": "{{baseUrl}}/admin/qr/check-in"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "type": "text/javascript", "exec": [
+          "const body = pm.response.json();",
+          "pm.test('QR check-in succeeded', () => pm.expect(body.success).to.eql(true));",
+          "pm.collectionVariables.set('queueId', body.data.queueItem._id);"
+        ] }
+      }]
+    },
+    {
+      "name": "Admin - Active Queue",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+        "url": "{{baseUrl}}/admin/queue"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "type": "text/javascript", "exec": [
+          "const body = pm.response.json();",
+          "pm.test('Active queue contains checked-in token', () => pm.expect(body.data.some((item) => item._id === pm.collectionVariables.get('queueId'))).to.eql(true));"
+        ] }
+      }]
+    },
+    {
+      "name": "Admin - Mark Queue Serving",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"status\": \"serving\"\n}" },
+        "url": "{{baseUrl}}/admin/queue/{{queueId}}"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "type": "text/javascript", "exec": [
+          "const body = pm.response.json();",
+          "pm.test('Queue token is serving', () => pm.expect(body.data.status).to.eql('serving'));"
+        ] }
+      }]
+    },
+    {
+      "name": "Admin - Mark Queue Served",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": { "mode": "raw", "raw": "{\n  \"status\": \"served\"\n}" },
+        "url": "{{baseUrl}}/admin/queue/{{queueId}}"
+      },
+      "event": [{
+        "listen": "test",
+        "script": { "type": "text/javascript", "exec": [
+          "const body = pm.response.json();",
+          "pm.test('Queue token is served', () => pm.expect(body.data.status).to.eql('served'));"
+        ] }
+      }]
+    },
+    {
+      "name": "Admin - Bookings",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+        "url": "{{baseUrl}}/admin/appointments?date={{bookingDate}}"
+      }
+    },
+    {
+      "name": "Admin - Dashboard",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+        "url": "{{baseUrl}}/admin/dashboard"
+      }
+    }
+  ]
+}
